@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học 290 Từ Vựng Flashcard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .progress {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .card-front {
+            background-color: #ffffff;
+            color: #2980b9;
+            border: 2px solid #e0e6ed;
+        }
+
+        .card-back {
+            background-color: #27ae60;
+            color: #ffffff;
+            transform: rotateY(180deg);
+        }
+
+        .word-text {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 20px;
+            font-weight: normal;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+        }
+
+        button.shuffle-btn {
+            background-color: #9b59b6;
+        }
+        
+        button.shuffle-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        .keyboard-hint {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #95a5a6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Học Từ Vựng (290 Từ)</h1>
+    <div class="progress" id="progress-text">Từ 1 / 290</div>
+
+    <div class="flashcard-container" onclick="flipCard()">
+        <div class="flashcard" id="flashcard">
+            <div class="card-face card-front">
+                <div class="word-text" id="word-en">Word</div>
+                <div class="instruction">(Nhấp vào thẻ hoặc phím Space để xem nghĩa)</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="word-text" id="word-vi">Nghĩa của từ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="prevCard()">&#8592; Câu trước</button>
+        <button class="shuffle-btn" onclick="shuffleCards()">Trộn ngẫu nhiên</button>
+        <button onclick="nextCard()">Câu tiếp &#8594;</button>
+    </div>
+
+    <div class="keyboard-hint">
+        Mẹo: Sử dụng phím mũi tên ⬅️ ➡️ để chuyển từ và phím <b>Space</b> (Khoảng trắng) để lật thẻ.
+    </div>
+
+    <script>
+        // Danh sách đầy đủ 290 từ vựng
+        const vocabulary = [
+            {"en": "to alleviate", "vi": "làm giảm, làm dịu bớt"},
+            {"en": "adverse (adj)", "vi": "bất lợi, có hại"},
+            {"en": "to advocate", "vi": "ủng hộ, biện hộ cho"},
+            {"en": "ambiguous (adj)", "vi": "mơ hồ, không rõ ràng"},
+            {"en": "apprehensive (adj)", "vi": "lo lắng, e sợ"},
+            {"en": "arduous (adj)", "vi": "khó khăn, gian khổ"},
+            {"en": "assertive (adj)", "vi": "quả quyết, quyết đoán"},
+            {"en": "benevolent (adj)", "vi": "nhân từ, tốt bụng"},
+            {"en": "coherent (adj)", "vi": "mạch lạc, rõ ràng"},
+            {"en": "comprehensive (adj)", "vi": "toàn diện, đầy đủ"},
+            {"en": "to contemplate", "vi": "suy ngẫm, cân nhắc"},
+            {"en": "to convey", "vi": "truyền đạt, biểu đạt"},
+            {"en": "credible (adj)", "vi": "đáng tin cậy"},
+            {"en": "crucial (adj)", "vi": "then chốt, quan trọng"},
+            {"en": "cynical (adj)", "vi": "hoài nghi, hay chỉ trích"},
+            {"en": "detrimental (adj)", "vi": "có hại, bất lợi"},
+            {"en": "diligent (adj)", "vi": "siêng năng, cần cù"},
+            {"en": "discrepancy (n)", "vi": "sự khác biệt, chênh lệch"},
+            {"en": "to disperse", "vi": "giải tán, phân tán"},
+            {"en": "to diverge", "vi": "tách ra, khác nhau"},
+            {"en": "to elaborate", "vi": "giải thích chi tiết"},
+            {"en": "eloquent (adj)", "vi": "có tài hùng biện, thuyết phục"},
+            {"en": "to emphasize", "vi": "nhấn mạnh"},
+            {"en": "to endeavor", "vi": "nỗ lực, cố gắng"},
+            {"en": "engrossed (adj)", "vi": "bị cuốn hút, mải mê"},
+            {"en": "to entail", "vi": "đòi hỏi, bao gồm"},
+            {"en": "equivalent (adj/n)", "vi": "tương đương"},
+            {"en": "to eradicate", "vi": "xóa bỏ, diệt trừ"},
+            {"en": "erratic (adj)", "vi": "thất thường, không ổn định"},
+            {"en": "excessive (adj)", "vi": "quá mức, thái quá"},
+            {"en": "feasible (adj)", "vi": "khả thi, có thể thực hiện"},
+            {"en": "formidable (adj)", "vi": "ghê gớm, đáng gờm"},
+            {"en": "frivolous (adj)", "vi": "phù phiếm, nhẹ dạ"},
+            {"en": "to gratify", "vi": "làm hài lòng"},
+            {"en": "hostile (adj)", "vi": "thù địch, chống đối"},
+            {"en": "imminent (adj)", "vi": "sắp xảy ra, cận kề"},
+            {"en": "impartial (adj)", "vi": "công bằng, vô tư"},
+            {"en": "imperative (adj)", "vi": "cấp bách, bắt buộc"},
+            {"en": "impulsive (adj)", "vi": "bốc đồng, thiếu suy nghĩ"},
+            {"en": "incessant (adj)", "vi": "không ngừng, liên miên"},
+            {"en": "to inhibit", "vi": "ngăn chặn, kiềm chế"},
+            {"en": "integrity (n)", "vi": "sự trung thực, liêm chính"},
+            {"en": "intricate (adj)", "vi": "phức tạp, rắc rối"},
+            {"en": "lucrative (adj)", "vi": "sinh lợi, béo bở"},
+            {"en": "meticulous (adj)", "vi": "tỉ mỉ, kỹ lưỡng"},
+            {"en": "notorious (adj)", "vi": "khét tiếng (tiêu cực)"},
+            {"en": "oblivious (adj)", "vi": "không nhận ra, lơ đãng"},
+            {"en": "plausible (adj)", "vi": "hợp lý, đáng tin"},
+            {"en": "pragmatic (adj)", "vi": "thực tế, thực dụng"},
+            {"en": "resilient (adj)", "vi": "kiên cường, phục hồi nhanh"},
+            {"en": "to scrutinize", "vi": "xem xét kỹ lưỡng"},
+            {"en": "to substantiate", "vi": "chứng minh, xác thực"},
+            {"en": "succinct (adj)", "vi": "ngắn gọn, súc tích"},
+            {"en": "tedious (adj)", "vi": "tẻ nhạt, chán ngắt"},
+            {"en": "tranquil (adj)", "vi": "yên bình, thanh bình"},
+            {"en": "to undermine", "vi": "làm suy yếu, phá hoại"},
+            {"en": "versatile (adj)", "vi": "linh hoạt, đa năng"},
+            {"en": "viable (adj)", "vi": "khả thi, có thể thực hiện"},
+            {"en": "vivid (adj)", "vi": "sinh động, rõ ràng"},
+            {"en": "vulnerable (adj)", "vi": "dễ bị tổn thương"},
+            {"en": "allegedly (adv)", "vi": "được cho là, cáo buộc là"},
+            {"en": "antagonist (n)", "vi": "kẻ đối địch, đối thủ"},
+            {"en": "to appease", "vi": "xoa dịu, làm nguôi giận"},
+            {"en": "to boast", "vi": "khoe khoang, tự hào (về)"},
+            {"en": "burgeoning (adj)", "vi": "phát triển nhanh chóng"},
+            {"en": "to coincide", "vi": "trùng hợp, xảy ra cùng lúc"},
+            {"en": "to collaborate", "vi": "hợp tác, cộng tác"},
+            {"en": "complacent (adj)", "vi": "tự mãn, thỏa mãn với bản thân"},
+            {"en": "to condone", "vi": "bỏ qua, tha thứ"},
+            {"en": "consecutive (adj)", "vi": "liên tiếp, nối tiếp"},
+            {"en": "conspicuous (adj)", "vi": "dễ thấy, nổi bật"},
+            {"en": "to contemplate", "vi": "suy ngẫm, dự định"},
+            {"en": "credible (adj)", "vi": "đáng tin cậy"},
+            {"en": "to culminate", "vi": "đạt đến đỉnh điểm"},
+            {"en": "deficit (n)", "vi": "sự thiếu hụt"},
+            {"en": "to deplete", "vi": "làm cạn kiệt"},
+            {"en": "to derive (from)", "vi": "bắt nguồn từ"},
+            {"en": "to detract (from)", "vi": "làm giảm giá trị"},
+            {"en": "to diminish", "vi": "giảm bớt, thu nhỏ"},
+            {"en": "to discern", "vi": "nhận ra, phân biệt"},
+            {"en": "to disregard", "vi": "phớt lờ, coi thường"},
+            {"en": "eloquence (n)", "vi": "tài hùng biện"},
+            {"en": "to emerge", "vi": "xuất hiện, nổi lên"},
+            {"en": "to endeavor", "vi": "nỗ lực, cố gắng"},
+            {"en": "enthralled (adj)", "vi": "bị mê hoặc, cuốn hút"},
+            {"en": "epitome (n)", "vi": "hình mẫu, ví dụ hoàn hảo"},
+            {"en": "erroneous (adj)", "vi": "sai lầm, không chính xác"},
+            {"en": "to exemplify", "vi": "minh họa, làm ví dụ cho"},
+            {"en": "exorbitant (adj)", "vi": "(giá cả) quá cao"},
+            {"en": "to facilitate", "vi": "tạo điều kiện, giúp đỡ"},
+            {"en": "futile (adj)", "vi": "vô ích, không hiệu quả"},
+            {"en": "to hinder", "vi": "cản trở, gây trở ngại"},
+            {"en": "hypothetical (adj)", "vi": "giả định, mang tính giả thuyết"},
+            {"en": "illicit (adj)", "vi": "bất hợp pháp"},
+            {"en": "impeccable (adj)", "vi": "hoàn hảo, không chê vào đâu"},
+            {"en": "inadvertent (adj)", "vi": "vô tình, không cố ý"},
+            {"en": "incessantly (adv)", "vi": "không ngừng, liên tục"},
+            {"en": "inherent (adj)", "vi": "vốn có, cố hữu"},
+            {"en": "intact (adj)", "vi": "nguyên vẹn, không bị hư hại"},
+            {"en": "intrinsic (adj)", "vi": "bản chất, bên trong"},
+            {"en": "to invoke", "vi": "viện dẫn, cầu khẩn"},
+            {"en": "to jeopardize", "vi": "gây nguy hiểm, đe dọa"},
+            {"en": "lucrative (adj)", "vi": "sinh lợi, béo bở"},
+            {"en": "mandatory (adj)", "vi": "bắt buộc"},
+            {"en": "metaphor (n)", "vi": "phép ẩn dụ"},
+            {"en": "to mitigate", "vi": "giảm nhẹ, làm dịu"},
+            {"en": "momentum (n)", "vi": "đà, động lực"},
+            {"en": "mundane (adj)", "vi": "bình thường, tẻ nhạt"},
+            {"en": "negligent (adj)", "vi": "cẩu thả, lơ đễnh"},
+            {"en": "notion (n)", "vi": "quan niệm, ý niệm"},
+            {"en": "obscure (adj)", "vi": "mơ hồ, khó hiểu"},
+            {"en": "obsolete (adj)", "vi": "lỗi thời, không còn dùng"},
+            {"en": "omission (n)", "vi": "sự bỏ sót, thiếu sót"},
+            {"en": "onerous (adj)", "vi": "nặng nề, khó nhọc"},
+            {"en": "to perceive", "vi": "nhận thức, cảm nhận"},
+            {"en": "peril (n)", "vi": "nguy hiểm, rủi ro"},
+            {"en": "pervasive (adj)", "vi": "lan rộng, phổ biến"},
+            {"en": "plight (n)", "vi": "hoàn cảnh khó khăn"},
+            {"en": "precise (adj)", "vi": "chính xác"},
+            {"en": "predominant (adj)", "vi": "chiếm ưu thế, nổi bật"},
+            {"en": "prevalent (adj)", "vi": "phổ biến, thịnh hành"},
+            {"en": "profound (adj)", "vi": "sâu sắc"},
+            {"en": "prolific (adj)", "vi": "năng suất cao, sáng tạo"},
+            {"en": "to prompt", "vi": "thúc đẩy, khiến cho"},
+            {"en": "prone (to) (adj)", "vi": "dễ bị, có khuynh hướng"},
+            {"en": "prosperous (adj)", "vi": "thịnh vượng, phát đạt"},
+            {"en": "to provoke", "vi": "khiêu khích, kích động"},
+            {"en": "prudent (adj)", "vi": "thận trọng, khôn ngoan"},
+            {"en": "to pursue", "vi": "theo đuổi"},
+            {"en": "rational (adj)", "vi": "hợp lý, có lý trí"},
+            {"en": "to reconcile", "vi": "hòa giải, dung hòa"},
+            {"en": "redundant (adj)", "vi": "dư thừa"},
+            {"en": "to refute", "vi": "bác bỏ, phủ nhận"},
+            {"en": "to reiterate", "vi": "nhắc lại, lặp lại"},
+            {"en": "to relinquish", "vi": "từ bỏ, nhượng lại"},
+            {"en": "reminiscent (adj)", "vi": "gợi nhớ, làm nhớ lại"},
+            {"en": "resolute (adj)", "vi": "kiên quyết, cứng rắn"},
+            {"en": "to retaliate", "vi": "trả đũa, trả thù"},
+            {"en": "to revere", "vi": "tôn kính, kính trọng"},
+            {"en": "rigorous (adj)", "vi": "nghiêm ngặt, khắt khe"},
+            {"en": "scrupulous (adj)", "vi": "cẩn trọng, trung thực"},
+            {"en": "skeptical (adj)", "vi": "hoài nghi, nghi ngờ"},
+            {"en": "to speculate", "vi": "suy đoán, phỏng đoán"},
+            {"en": "spontaneous (adj)", "vi": "tự phát, tự nhiên"},
+            {"en": "subtle (adj)", "vi": "tinh tế, khéo léo"},
+            {"en": "superficial (adj)", "vi": "hời hợt, bề ngoài"},
+            {"en": "to surpass", "vi": "vượt trội, vượt qua"},
+            {"en": "susceptible (adj)", "vi": "dễ bị ảnh hưởng"},
+            {"en": "to sustain", "vi": "duy trì, chống đỡ"},
+            {"en": "tangible (adj)", "vi": "hữu hình, rõ ràng"},
+            {"en": "to terminate", "vi": "chấm dứt, kết thúc"},
+            {"en": "to thrive", "vi": "phát triển mạnh mẽ"},
+            {"en": "transient (adj)", "vi": "thoáng qua, tạm thời"},
+            {"en": "transparent (adj)", "vi": "minh bạch, rõ ràng"},
+            {"en": "turbulent (adj)", "vi": "hỗn loạn, biến động"},
+            {"en": "undeniable (adj)", "vi": "không thể phủ nhận"},
+            {"en": "unprecedented (adj)", "vi": "chưa từng có"},
+            {"en": "to violate", "vi": "vi phạm"},
+            {"en": "vividly (adv)", "vi": "một cách sinh động, rõ ràng"},
+            {"en": "to warrant", "vi": "đảm bảo, biện minh cho"},
+            {"en": "to withdraw", "vi": "rút lui, rút lại"},
+            {"en": "to withstand", "vi": "chịu đựng, chống lại"},
+            {"en": "widespread (adj)", "vi": "lan rộng, phổ biến"},
+            {"en": "to abide by", "vi": "tuân thủ"},
+            {"en": "to accelerate", "vi": "tăng tốc"},
+            {"en": "to acclaim", "vi": "hoan nghênh, ca ngợi"},
+            {"en": "to acquire", "vi": "đạt được, thu được"},
+            {"en": "to adhere (to)", "vi": "dính vào, tuân theo"},
+            {"en": "affluent (adj)", "vi": "giàu có, sung túc"},
+            {"en": "to allocate", "vi": "phân bổ, chỉ định"},
+            {"en": "to amplify", "vi": "khuếch đại, mở rộng"},
+            {"en": "anecdote (n)", "vi": "giai thoại, mẩu chuyện nhỏ"},
+            {"en": "arbitrary (adj)", "vi": "tùy tiện, không có căn cứ"},
+            {"en": "assertion (n)", "vi": "sự khẳng định"},
+            {"en": "to attain", "vi": "đạt được"},
+            {"en": "authentic (adj)", "vi": "thật, xác thực"},
+            {"en": "belligerent (adj)", "vi": "hiếu chiến, thù địch"},
+            {"en": "bizarre (adj)", "vi": "kỳ lạ, dị thường"},
+            {"en": "to breach", "vi": "vi phạm, phá vỡ"},
+            {"en": "candid (adj)", "vi": "thẳng thắn, trung thực"},
+            {"en": "coincidence (n)", "vi": "sự trùng hợp"},
+            {"en": "to collide", "vi": "va chạm, xung đột"},
+            {"en": "complacency (n)", "vi": "sự tự mãn"},
+            {"en": "to comprise", "vi": "bao gồm, chứa đựng"},
+            {"en": "to conceive (of)", "vi": "hình dung, tưởng tượng"},
+            {"en": "to condense", "vi": "cô đọng, rút gọn"},
+            {"en": "to confer", "vi": "trao tặng, bàn bạc"},
+            {"en": "to conform (to)", "vi": "tuân theo, thích nghi"},
+            {"en": "to confront", "vi": "đối mặt, đương đầu"},
+            {"en": "to conserve", "vi": "bảo tồn, giữ gìn"},
+            {"en": "to contemplate", "vi": "suy ngẫm, dự định"},
+            {"en": "to contradict", "vi": "mâu thuẫn, phủ nhận"},
+            {"en": "to convey", "vi": "truyền đạt, bày tỏ"},
+            {"en": "to correspond (to/with)", "vi": "tương ứng, phù hợp"},
+            {"en": "credible (adj)", "vi": "đáng tin cậy"},
+            {"en": "culpable (adj)", "vi": "có tội, đáng khiển trách"},
+            {"en": "to curtail", "vi": "cắt giảm, hạn chế"},
+            {"en": "to decipher", "vi": "giải mã, hiểu được"},
+            {"en": "to defy", "vi": "thách thức, chống đối"},
+            {"en": "to denounce", "vi": "tố cáo, lên án"},
+            {"en": "to depict", "vi": "mô tả, phác họa"},
+            {"en": "to deter", "vi": "ngăn cản, răn đe"},
+            {"en": "to detract (from)", "vi": "làm giảm giá trị, uy tín"},
+            {"en": "to devise", "vi": "phát minh, nghĩ ra"},
+            {"en": "to diminish", "vi": "giảm bớt, thu nhỏ"},
+            {"en": "to disclose", "vi": "tiết lộ, để lộ ra"},
+            {"en": "discretion (n)", "vi": "sự thận trọng, kín đáo"},
+            {"en": "to disperse", "vi": "giải tán, phân tán"},
+            {"en": "to disrupt", "vi": "làm gián đoạn, phá vỡ"},
+            {"en": "to diverge", "vi": "khác nhau, rẽ ra"},
+            {"en": "dubious (adj)", "vi": "nghi ngờ, không chắc chắn"},
+            {"en": "to elicit", "vi": "khơi gợi, gợi ra"},
+            {"en": "to elude", "vi": "né tránh, thoát khỏi"},
+            {"en": "to emerge", "vi": "xuất hiện, nổi lên"},
+            {"en": "empirical (adj)", "vi": "dựa trên kinh nghiệm, thực nghiệm"},
+            {"en": "to endure", "vi": "chịu đựng, kéo dài"},
+            {"en": "to enhance", "vi": "nâng cao, cải thiện"},
+            {"en": "to enrich", "vi": "làm giàu, làm phong phú"},
+            {"en": "to entail", "vi": "đòi hỏi, bao gồm"},
+            {"en": "to entice", "vi": "dụ dỗ, thu hút"},
+            {"en": "equilibrium (n)", "vi": "trạng thái cân bằng"},
+            {"en": "to eradicate", "vi": "xóa bỏ, diệt trừ"},
+            {"en": "to escalate", "vi": "leo thang, tăng lên"},
+            {"en": "to evaluate", "vi": "đánh giá, ước lượng"},
+            {"en": "to evoke", "vi": "gợi lên (cảm xúc, ký ức)"},
+            {"en": "to exceed", "vi": "vượt quá"},
+            {"en": "exemplary (adj)", "vi": "gương mẫu, kiểu mẫu"},
+            {"en": "to exert", "vi": "sử dụng, áp dụng (sức lực, quyền lực)"},
+            {"en": "explicit (adj)", "vi": "rõ ràng, minh bạch"},
+            {"en": "feasible (adj)", "vi": "khả thi"},
+            {"en": "to fluctuate", "vi": "dao động, biến động"},
+            {"en": "to formulate", "vi": "xây dựng, đề ra"},
+            {"en": "to fortify", "vi": "củng cố, làm mạnh thêm"},
+            {"en": "to foster", "vi": "thúc đẩy, nuôi dưỡng"},
+            {"en": "friction (n)", "vi": "xung đột, ma sát"},
+            {"en": "fundamental (adj)", "vi": "cơ bản, thiết yếu"},
+            {"en": "to gratify", "vi": "làm hài lòng, thỏa mãn"},
+            {"en": "grievance (n)", "vi": "lời phàn nàn, bất bình"},
+            {"en": "to hamper", "vi": "cản trở, gây khó khăn"},
+            {"en": "harsh (adj)", "vi": "khắc nghiệt, gay gắt"},
+            {"en": "to heed", "vi": "chú ý, lưu tâm"},
+            {"en": "hindrance (n)", "vi": "sự cản trở"},
+            {"en": "to illustrate", "vi": "minh họa, làm rõ"},
+            {"en": "to immerse", "vi": "đắm chìm, hòa mình vào"},
+            {"en": "to impair", "vi": "làm suy yếu, tổn hại"},
+            {"en": "to impose", "vi": "áp đặt"},
+            {"en": "incentive (n)", "vi": "động lực, khuyến khích"},
+            {"en": "to incorporate", "vi": "kết hợp, bao gồm"},
+            {"en": "inevitable (adj)", "vi": "không thể tránh khỏi"},
+            {"en": "to infer", "vi": "suy ra, kết luận"},
+            {"en": "ingenious (adj)", "vi": "khéo léo, thông minh, sáng tạo"},
+            {"en": "to inhibit", "vi": "ngăn chặn, kiềm chế"},
+            {"en": "initiative (n)", "vi": "sáng kiến, sự chủ động"},
+            {"en": "innovative (adj)", "vi": "đổi mới, sáng tạo"},
+            {"en": "insightful (adj)", "vi": "sâu sắc, sáng suốt"},
+            {"en": "to integrate", "vi": "hội nhập, kết hợp"},
+            {"en": "integrity (n)", "vi": "tính trung thực, chính trực"},
+            {"en": "to intimidate", "vi": "đe dọa, hăm dọa"},
+            {"en": "intricate (adj)", "vi": "phức tạp, rắc rối"},
+            {"en": "to intrude", "vi": "xâm phạm, chen vào"},
+            {"en": "irrelevant (adj)", "vi": "không liên quan, không thích hợp"},
+            {"en": "legitimate (adj)", "vi": "hợp pháp, chính đáng"},
+            {"en": "lenient (adj)", "vi": "khoan dung, nhân hậu"},
+            {"en": "liability (n)", "vi": "trách nhiệm pháp lý"},
+            {"en": "linguistic (adj)", "vi": "thuộc ngôn ngữ học"},
+            {"en": "lucid (adj)", "vi": "rõ ràng, dễ hiểu"},
+            {"en": "to magnify", "vi": "phóng đại, làm to ra"},
+            {"en": "mandatory (adj)", "vi": "bắt buộc, bắt phải làm"},
+            {"en": "meticulous (adj)", "vi": "tỉ mỉ, kỹ lưỡng"},
+            {"en": "to mimic", "vi": "bắt chước, nhái lại"},
+            {"en": "notorious (adj)", "vi": "khét tiếng (tiêu cực)"},
+            {"en": "oblivious (adj)", "vi": "không nhận ra, lơ đãng"},
+            {"en": "obsolete (adj)", "vi": "lỗi thời, lạc hậu"},
+            {"en": "ominous (adj)", "vi": "điềm gở, báo hiệu xấu"},
+            {"en": "outlandish (adj)", "vi": "kỳ quặc, lạ thường"},
+            {"en": "to overwhelm", "vi": "áp đảo, tràn ngập"},
+            {"en": "paradox (n)", "vi": "nghịch lý"},
+            {"en": "perceivable (adj)", "vi": "có thể nhận thấy được"},
+            {"en": "perplexed (adj)", "vi": "bối rối, lúng túng"},
+            {"en": "pertinent (adj)", "vi": "thích hợp, có liên quan"},
+            {"en": "pivotal (adj)", "vi": "then chốt, quan trọng"},
+            {"en": "plausible (adj)", "vi": "hợp lý, đáng tin"},
+            {"en": "to postulate", "vi": "giả định, cho rằng"},
+            {"en": "precaution (n)", "vi": "biện pháp phòng ngừa"},
+            {"en": "predicament (n)", "vi": "tình huống khó xử"},
+            {"en": "preliminary (adj)", "vi": "sơ bộ, ban đầu"},
+            {"en": "to presume", "vi": "cho là, đoán là"},
+            {"en": "to prevail", "vi": "chiếm ưu thế, thắng thế"},
+            {"en": "profoundly (adv)", "vi": "sâu sắc, mạnh mẽ"},
+            {"en": "to prolong", "vi": "kéo dài, gia hạn"}
+        ];
+
+        let currentDeck = [...vocabulary];
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        const wordEnEl = document.getElementById('word-en');
+        const wordViEl = document.getElementById('word-vi');
+        const progressTextEl = document.getElementById('progress-text');
+        const flashcardEl = document.getElementById('flashcard');
+
+        // Hàm cập nhật nội dung thẻ
+        function updateCard() {
+            wordEnEl.innerText = currentDeck[currentIndex].en;
+            wordViEl.innerText = currentDeck[currentIndex].vi;
+            progressTextEl.innerText = `Từ ${currentIndex + 1} / ${currentDeck.length}`;
+            
+            // Đảm bảo thẻ luôn ngửa khi chuyển câu mới
+            if (isFlipped) {
+                flashcardEl.classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+
+        // Hàm lật thẻ
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcardEl.classList.add('flipped');
+            } else {
+                flashcardEl.classList.remove('flipped');
+            }
+        }
+
+        // Chuyển thẻ tiếp theo
+        function nextCard() {
+            if (currentIndex < currentDeck.length - 1) {
+                currentIndex++;
+                updateCard();
+            }
+        }
+
+        // Quay lại thẻ trước
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        // Trộn ngẫu nhiên (Shuffle)
+        function shuffleCards() {
+            for (let i = currentDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+            }
+            currentIndex = 0; // Đưa về thẻ đầu tiên sau khi trộn
+            updateCard();
+        }
+
+        // Hỗ trợ phím tắt bàn phím
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextCard();
+            } else if (e.key === 'ArrowLeft') {
+                prevCard();
+            } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault(); // Tránh bị cuộn trang khi nhấn Space
+                flipCard();
+            }
+        });
+
+        // Khởi tạo trạng thái ban đầu
+        updateCard();
+
+    </script>
+</body>
+</html>
